@@ -19,9 +19,14 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v2
 
+      - name: Make makebuild.sh executable
+        run: chmod +x ./makebuild.sh
+
       - name: Build wine
+        id: get_version
         run: |
            export VERSION_TAG=$(cat VERSION | tr -d '\n')
+           echo "VERSION_TAG=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
            ./makebuild.sh lutris-GE https://github.com/loathingKernel/wine-ge-custom GE-Proton$VERSION_TAG
 
       - name: Upload artifact
