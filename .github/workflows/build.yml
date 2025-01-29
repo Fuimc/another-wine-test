@@ -1,0 +1,41 @@
+name: Build Wine-GE
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          token: ${{ secrets.PAT_GITHUB_TOKEN }}
+
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v2
+
+      - name: Build wine
+        run: |
+           export VERSION_TAG=$(cat VERSION | tr -d '\n')
+           ./makebuild.sh lutris-GE https://github.com/loathingKernel/wine-ge-custom GE-Proton$VERSION_TAG
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: wine-build
+          path: builds/runners/wine/*.tar.xz
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        if: startsWith(github.ref, 'refs/heads/master')
+        with:
+          tag_name: GE-Proton${{ steps.get_version.outputs.VERSION_TAG }}
+          files: builds/runners/wine/*.tar.xz
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_GITHUB_TOKEN }}
